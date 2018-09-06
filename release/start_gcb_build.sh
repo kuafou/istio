@@ -53,13 +53,15 @@ function usage() {
     -w        specify that script should wait until build done  (optional)
 
     -r <name> GCR bucket/path to store build artifacts          (required)
-    -s <name> GCS bucket/path to store build artifacts          (required)"
+    -s <name> GCS bucket/path to store build artifacts          (required)
+    -c <name> Branch of the build                               (required)"
   exit 1
 }
 
-while getopts a:k:m:p:r:s:t:u:v:w arg ; do
+while getopts a:c:k:m:p:r:s:t:u:v:w arg ; do
   case "${arg}" in
     a) SVC_ACCT="${OPTARG}";;
+    c) BRANCH="${OPTARG}";;
     k) KEY_FILE_PATH="${OPTARG}";;
     m) REPO_FILE="${OPTARG}";;
     p) PROJECT_ID="${OPTARG}";;
@@ -81,6 +83,7 @@ done
 
 [[ -z "${GCS_PATH}" ]] && usage
 [[ -z "${GCR_PATH}" ]] && usage
+[[ -z "${BRANCH}"   ]] && usage
 
 DEFAULT_SVC_ACCT="cloudbuild@${PROJECT_ID}.iam.gserviceaccount.com"
 
@@ -96,7 +99,8 @@ cat << EOF > "${SUBS_FILE}"
     "_MFEST_FILE": "${REPO_FILE}",
     "_MFEST_VER": "${REPO_FILE_VER}",
     "_GCS_PATH": "${GCS_PATH}",
-    "_GCR_PATH": "${GCR_PATH}"
+    "_GCR_PATH": "${GCR_PATH}",
+    "_BRANCH": "${BRANCH}"
   }
 EOF
 
