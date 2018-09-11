@@ -38,13 +38,14 @@ REPO_FILE=default.xml
 REPO_FILE_VER=master
 WAIT_FOR_RESULT="false"
 
-GCR_PATH=""
+DOCKER_HUB=""
 GCS_PATH=""
 
 function usage() {
   echo "$0
     -p <name> project ID                                        (required)
     -a        service account for login                         (optional, defaults to project's cloudbuild@ )
+    -h <name> hub for artifacts(e.g. gcr.io/istio-testing)      (required)
     -k <file> path to key file for service account              (optional)
     -v <ver>  version string                                    (optional, defaults to $VER_STRING )
     -u <url>  URL to git repo with manifest file                (required)
@@ -52,20 +53,19 @@ function usage() {
     -t <tag>  commit tag or branch for manifest repo in -u      (optional, defaults to $REPO_FILE_VER )
     -w        specify that script should wait until build done  (optional)
 
-    -r <name> GCR bucket/path to store build artifacts          (required)
     -s <name> GCS bucket/path to store build artifacts          (required)
     -c <name> Branch of the build                               (required)"
   exit 1
 }
 
-while getopts a:c:k:m:p:r:s:t:u:v:w arg ; do
+while getopts a:c:h:k:m:p:s:t:u:v:w arg ; do
   case "${arg}" in
     a) SVC_ACCT="${OPTARG}";;
     c) BRANCH="${OPTARG}";;
+    h) DOCKER_HUB="${OPTARG}";;
     k) KEY_FILE_PATH="${OPTARG}";;
     m) REPO_FILE="${OPTARG}";;
     p) PROJECT_ID="${OPTARG}";;
-    r) GCR_PATH="${OPTARG}";;
     s) GCS_PATH="${OPTARG}";;
     t) REPO_FILE_VER="${OPTARG}";;
     u) REPO="${OPTARG}";;
@@ -80,10 +80,9 @@ done
 [[ -z "${REPO_FILE}"     ]] && usage
 [[ -z "${REPO_FILE_VER}" ]] && usage
 [[ -z "${VER_STRING}"    ]] && usage
-
-[[ -z "${GCS_PATH}" ]] && usage
-[[ -z "${GCR_PATH}" ]] && usage
-[[ -z "${BRANCH}"   ]] && usage
+[[ -z "${GCS_PATH}"      ]] && usage
+[[ -z "${DOCKER_HUB}"    ]] && usage
+[[ -z "${BRANCH}"        ]] && usage
 
 DEFAULT_SVC_ACCT="cloudbuild@${PROJECT_ID}.iam.gserviceaccount.com"
 
@@ -99,7 +98,7 @@ cat << EOF > "${SUBS_FILE}"
     "_MFEST_FILE": "${REPO_FILE}",
     "_MFEST_VER": "${REPO_FILE_VER}",
     "_GCS_PATH": "${GCS_PATH}",
-    "_GCR_PATH": "${GCR_PATH}",
+    "_DOCKER_HUB": "${DOCKER_HUB}",
     "_BRANCH": "${BRANCH}"
   }
 EOF

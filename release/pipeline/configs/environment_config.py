@@ -25,18 +25,19 @@ airflow_fixed_config = dict(
     GITHUB_REPO='istio',
     MFEST_FILE='build.xml',
     MFEST_URL='https://github.com/istio/green-builds',
-    PROJECT_ID='istio-release',
+    PROJECT_ID='istio-io',
     SVC_ACCT='202987436673-compute@developer.gserviceaccount.com',
     TOKEN_FILE='/var/run/secrets/kubernetes.io/serviceaccount/tokenFile')
 
 
-def GetDefaultAirflowConfig(branch, gcs_path, mfest_commit, pipeline_type,
+def GetDefaultAirflowConfig(branch, docker_hub, gcs_path, mfest_commit, pipeline_type,
 			verify_consistency, version):
   """Return a dict of the configuration for the Pipeline."""
   config = dict(airflow_fixed_config)
 
   # direct config
   config['BRANCH']             = branch
+  config['DOCKER_HUB']         = docker_hub # e.g. docker.io/istio
   config['GCS_STAGING_PATH']   = gcs_path
   config['MFEST_COMMIT']       = mfest_commit
   config['PIPELINE_TYPE']      = pipeline_type
@@ -61,6 +62,6 @@ def GetDefaultAirflowConfig(branch, gcs_path, mfest_commit, pipeline_type,
 
 def GetDefaultAirflowConfigKeys():
   """Return a list of the keys of configuration for the Pipeline."""
-  dc = GetDefaultAirflowConfig(branch="", gcs_path="", mfest_commit="", pipeline_type="",
+  dc = GetDefaultAirflowConfig(branch="", docker_hub="", gcs_path="", mfest_commit="", pipeline_type="",
 			verify_consistency="", version="")
   return list(dc.keys())

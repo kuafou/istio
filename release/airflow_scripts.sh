@@ -93,11 +93,9 @@ function build_template() {
       ./start_gcb_build.sh -w -p "$PROJECT_ID" -r "$GCR_STAGING_DEST" -s "$GCS_BUILD_PATH" \
         -v "$VERSION" -u "$MFEST_URL" -t "$m_commit" -m "$MFEST_FILE" -a "$SVC_ACCT"
     else
-      ./start_gcb_build.sh -w -p "$PROJECT_ID" -r "$GCR_STAGING_DEST" -s "$GCS_BUILD_PATH" \
+      ./start_gcb_build.sh -w -p "$PROJECT_ID" -h "$DOCKER_HUB" -s "$GCS_BUILD_PATH" \
         -v "$VERSION" -u "$MFEST_URL" -t "$m_commit" -m "$MFEST_FILE" -a "$SVC_ACCT" -c "$BRANCH"
-  fi
-}
-
+    fi
   # NOTE: if you add commands to build_template after start_gcb_build.sh then take care to preserve its return value
 }
 
@@ -110,7 +108,7 @@ function test_command() {
     ./githubctl \
     --token_file="$TOKEN_FILE" \
     --op=dailyRelQual \
-    --hub="gcr.io/$GCR_STAGING_DEST" \
+    --hub="$DOCKER_HUB" \
     --gcs_path="$GCS_BUILD_PATH" \
     --tag="$VERSION" \
     --base_branch="$BRANCH"
@@ -122,7 +120,7 @@ function modify_values_command() {
     chmod u+x modify_values.sh
     echo "PIPELINE TYPE is $PIPELINE_TYPE"
     if [ "$PIPELINE_TYPE" = "daily" ]; then
-        hub="gcr.io/$GCR_STAGING_DEST"
+        hub="$DOCKER_HUB"
     elif [ "$PIPELINE_TYPE" = "monthly" ]; then
         hub="docker.io/istio"
     fi
@@ -157,7 +155,6 @@ function release_push_github_docker_template() {
   gsutil -q cp "gs://$GCS_RELEASE_TOOLS_PATH/data/release/*.sh" .
   chmod u+x ./*
 
-  if [ "$BRANCH" = "release-1.0" ] || [ "$BRANCH" = "collab-gcp-identity" ]; then
   ./start_gcb_publish.sh \
     -p "$RELEASE_PROJECT_ID" -a "$SVC_ACCT"  \
     -v "$VERSION" -s "$GCS_FULL_STAGING_PATH" \
@@ -165,18 +162,7 @@ function release_push_github_docker_template() {
     -g "$GCS_GITHUB_PATH" -u "$MFEST_URL" \
     -t "$m_commit" -m "$MFEST_FILE" \
     -h "$GITHUB_ORG" -i "$GITHUB_REPO" \
-    -d "$DOCKER_HUB" -w
-  else
-  ./start_gcb_publish.sh \
-    -p "$RELEASE_PROJECT_ID" -a "$SVC_ACCT"  \
-    -v "$VERSION" -s "$GCS_FULL_STAGING_PATH" \
-    -b "$GCS_MONTHLY_RELEASE_PATH" -r "$GCR_RELEASE_DEST" \
-    -g "$GCS_GITHUB_PATH" -u "$MFEST_URL" \
-    -t "$m_commit" -m "$MFEST_FILE" \
-    -h "$GITHUB_ORG" -i "$GITHUB_REPO" \
-    -d "$DOCKER_HUB" -w
-    #-d "$DOCKER_HUB" -w -c "$BRANCH"
-  fi
+    -w
 }
 
 function release_tag_github_template() {
